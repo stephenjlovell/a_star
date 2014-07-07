@@ -19,19 +19,56 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #-----------------------------------------------------------------------------------
 
+module AStar
 
-require './lib/graph.rb'
-require './lib/search.rb'
+  def self.retrieve_pv(active, from)
+    pv = []
+    until active.parent.nil? do
+      pv << active
+      active = active.parent
+    end
+    pv
+  end
 
-graph = AStar::Graph.new(8)
-5.times {|n| graph.disable(5, n) }
-5.times {|n| graph.disable(2, 7-n) }
-start = graph[0,3]
-goal = graph[7,0]
+  def self.search(graph, start, goal)
+    open = {}
+    closed = {}
+    active = start
 
-pv = AStar::search(graph, start, goal)
-print pv, "\n"
-graph.print(start, goal, pv)
+    open.store(start, true)
+
+    until open.empty? do
+      active = open.min_by { |node, value| node.f(goal) }.first
+      return retrieve_pv(active, start) if active == goal
+      
+      open.delete(active)
+      closed.store(active, true)
+
+      next unless active.enabled
+
+      active.edges.each do |edge|
+        child = edge.child
+        next if closed[child]
+
+        g = active.g + edge.cost
+
+        if !open[child] || g < child.g
+          # If the child node hasn't been tried or if the current path to the child node is shorter than 
+          # the previously tried path, save the g value in the child node.
+          child.parent = active
+          child.g = g
+          child.h(goal)
+          open.store(child, true) if !open[child] 
+        end
+      end
+    end
+
+    return nil 
+  end
+
+
+
+end
 
 
 

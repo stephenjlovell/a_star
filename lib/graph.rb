@@ -21,11 +21,6 @@
 
 module AStar
 
-  def self.manhattan_distance(from, to)
-    (from.y-to.y).abs + (from.x-to.x).abs
-  end
-
-
   class Edge
     attr_reader :cost, :child
 
@@ -37,19 +32,34 @@ module AStar
     def inspect
       "<E #{@cost}:#{@child.inspect}>"
     end
-
   end
 
   class Node
-    attr_accessor :g, :h, :parent, :edges
-    attr_reader :x, :y
+    attr_accessor :g, :h, :parent, :edges, :enabled
+    attr_reader :x, :y, :hash
 
     def initialize(x,y)
       @x = x
       @y = y
-      @g = 0
-      @h = 0
+      
+      @g = 0  # Used to store distance from the starting node to the current node
+      # Stores a heuristic estimate of the distance remaining to the goal node.
+
       @edges = []  # an array of edge structs
+      @enabled = true
+      @hash = [@x, @y].hash
+    end
+
+    def ==(other)
+      @hash == other.hash
+    end
+
+    def h(goal)
+      @h ||= AStar::manhattan_distance(self, goal)
+    end
+
+    def f(goal)
+      @g + h(goal)
     end
 
     def inspect
@@ -58,7 +68,6 @@ module AStar
   end
 
   class Graph # creates a square grid of (width)**2 nodes, each linked to any adjacent nodes.
-    # include Enumerable
 
     def initialize(width)
       @width = width
@@ -71,6 +80,53 @@ module AStar
         row.each_with_index do |node, x|
           yield(node)
         end
+      end
+    end
+
+    def to_h
+      @nodes.flatten.inject({}) { |hsh, node| hsh[node] = true; hsh }
+    end
+
+    def [](x,y)
+      @nodes[y][x]
+    end
+
+    def []=(x,y,node)
+      @nodes[y][x] = node
+    end
+
+    def disable(x,y)
+      @nodes[y][x].enabled = false
+    end
+
+    def enable(x,y)
+      @nodes[y][x].enabled = true
+    end
+
+    GRAPHICS = { open: "\u00B7", blocked: "\u25a0", start: "\u0391", goal: "\u03A9", pv: "\u0298" }
+
+    def print(start=nil, goal=nil, pv=nil)
+      if pv.nil?
+        pv = {}
+      else
+        pv = pv.inject({}){|hsh, node| hsh[node] = true; hsh }
+      end
+      puts separator = "|--" + "-"*(4*@width-3) + "--|"
+      @nodes.reverse.each do |row|
+        line = "|  " + row.map do |node|
+          if !node.enabled 
+            GRAPHICS[:blocked]
+          elsif node == start
+            GRAPHICS[:start]
+          elsif node == goal
+            GRAPHICS[:goal]
+          elsif pv[node]
+            GRAPHICS[:pv]
+          else
+            GRAPHICS[:open]
+          end
+        end.join("   ") + "  |"
+        puts line, separator
       end
     end
 
@@ -96,6 +152,9 @@ module AStar
 
   end
 
+  def self.manhattan_distance(from, to)
+    (from.y-to.y).abs + (from.x-to.x).abs
+  end
 
 
 
