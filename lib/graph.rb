@@ -21,32 +21,18 @@
 
 module AStar
 
-  class Edge
-    attr_reader :cost, :child
+  Edge = Struct.new(:cost, :child)
 
-    def initialize(cost, child)
-      @cost = cost
-      @child = child
-    end
-
-    def inspect
-      "<E #{@cost}:#{@child.inspect}>"
-    end
-  end
-
-  class Node
+  class CartesianNode
     attr_accessor :g, :h, :parent, :edges, :enabled
     attr_reader :x, :y, :hash
 
     def initialize(x,y)
-      @x = x
-      @y = y
+      @x, @y = x, y # Stores the Cartesian coordinates for this node.
+      @g = 0  # Stores distance from the starting node to the current node
+      @edges = []  # An array of edge structs storing references to any adjacent nodes.
+      @enabled = true  # If set to false, this node is 'impassible' and cannot be traversed.
       
-      @g = 0  # Used to store distance from the starting node to the current node
-      # Stores a heuristic estimate of the distance remaining to the goal node.
-
-      @edges = []  # an array of edge structs
-      @enabled = true
       @hash = [@x, @y].hash
     end
 
@@ -54,7 +40,7 @@ module AStar
       @hash == other.hash
     end
 
-    def h(goal)
+    def h(goal) # Stores a heuristic estimate of the distance remaining to the goal node.
       @h ||= AStar::manhattan_distance(self, goal)
     end
 
@@ -67,11 +53,11 @@ module AStar
     end
   end
 
-  class Graph # creates a square grid of (width)**2 nodes, each linked to any adjacent nodes.
-
+  class CartesianGraph # creates an interconnected Cartesian graph of (width)**2 nodes. 
+                       # Each node is linked to all adjacent nodes at initialization.
     def initialize(width)
       @width = width
-      @nodes = Array.new(width) {|y| Array.new(width) {|x| Node.new(x,y) } }
+      @nodes = Array.new(width) {|y| Array.new(width) {|x| CartesianNode.new(x,y) } }
       link_nodes
     end
 
@@ -91,10 +77,6 @@ module AStar
       @nodes[y][x]
     end
 
-    def []=(x,y,node)
-      @nodes[y][x] = node
-    end
-
     def disable(x,y)
       @nodes[y][x].enabled = false
     end
@@ -105,10 +87,12 @@ module AStar
 
     GRAPHICS = { open: "\u00B7", blocked: "\u25a0", start: "\u0391", goal: "\u03A9", pv: "\u0298" }
 
-    def print(start=nil, goal=nil, pv=nil)
-      if pv.nil?
+    def print(start=nil, goal=nil, pv=nil) # Prints out the graph along with the path taken from the start
+      if pv.nil? || pv.empty?              # node to the goal, if given.
         pv = {}
       else
+        puts "\n"
+        p pv # Print out the path taken to the goal
         pv = pv.inject({}){|hsh, node| hsh[node] = true; hsh }
       end
       puts separator = "|--" + "-"*(4*@width-3) + "--|"
@@ -131,19 +115,15 @@ module AStar
     end
 
     private
-    def link_nodes
-      each do |node|
+    def link_nodes    # Iterates over all nodes in the graph, adding a reference to each adjacent node
+      each do |node|  # along with a movement cost representing the distance between the nodes.
         (-1..1).each do |y_offset|
           (-1..1).each do |x_offset|
             y = node.y + y_offset
             x = node.x + x_offset
             if 0 <= x && x < @width && 0 <= y && y < @width && (x_offset != 0 || y_offset != 0)
               other = @nodes[y][x]
-              if AStar::manhattan_distance(node, other) == 2
-                node.edges << AStar::Edge.new(141, other)
-              else
-                node.edges << AStar::Edge.new(100, other)
-              end
+              node.edges << Edge.new(AStar::distance(node, other), other)
             end
           end
         end
@@ -152,8 +132,12 @@ module AStar
 
   end
 
-  def self.manhattan_distance(from, to)
-    (from.y-to.y).abs + (from.x-to.x).abs
+  def self.manhattan_distance(from, to)         # Returns the movement cost of going directly from one
+    ((from.y-to.y).abs + (from.x-to.x).abs)*100 # node to another without allowing diagonal movement.
+  end
+
+  def self.distance(from, to)  # Returns the actual straight-line distance between the two nodes.
+    ((((from.y-to.y).abs)**2 + ((from.x-to.x).abs)**2)**(1/2.0))*100
   end
 
 end
