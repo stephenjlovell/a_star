@@ -33,7 +33,7 @@ module AStar
       @edges = []  # An array of edge structs storing references to any adjacent nodes.
       @enabled = true  # If set to false, this node is 'impassible' and cannot be traversed.
       
-      @hash = [@x, @y].hash
+      @hash = [@x, @y].hash # create a hash value used when storing the node as a hash key.
     end
 
     def ==(other)
@@ -44,8 +44,8 @@ module AStar
       @h ||= AStar::manhattan_distance(self, goal)
     end
 
-    def f(goal)
-      @g + h(goal)
+    def f(goal)    # Estimates the value of the current path being taken based on the actual distance
+      @g + h(goal) # to this node from the start and the estimated distance remaining to the goal.
     end
 
     def inspect

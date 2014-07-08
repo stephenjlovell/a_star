@@ -21,8 +21,8 @@
 
 module AStar
 
-  def self.retrieve_pv(active, from) # This routine re-traces our steps from the goal node
-    pv = []                          #  back to the starting node.
+  def self.retrieve_pv(active, from) # Re-trace our steps from the current node
+    pv = []                          # back to the starting node.
     until active.parent.nil? do
       pv << active
       active = active.parent
@@ -31,29 +31,28 @@ module AStar
   end
 
   def self.search(start, goal)
-    open = {}
-    closed = {}
+    open, closed = {}, {}
     active = start
+    open.store(start, true) # Add the starting node to the open set.
 
-    open.store(start, true)
-
-    until open.empty? do
-      active = open.min_by { |node, value| node.f(goal) }.first
-      return retrieve_pv(active, start) if active == goal
+    until open.empty? do # Keep searching until we reach the goal or run out of reachable nodes. 
+      active = open.min_by { |node, value| node.f(goal) }.first # try the most promising nodes first.
+      return retrieve_pv(active, start) if active == goal # Stop searching once the goal is reached.
       
-      open.delete(active)
+      open.delete(active) # Move the active node from the open set to the closed set.
       closed.store(active, true)
 
-      next unless active.enabled # if this node is impassible, move on to the next one.
+      next unless active.enabled # if this node is impassible, ignore it and move on to the next child.
 
       active.edges.each do |edge|
         child = edge.child
-        next if closed[child]
+        next if closed[child] # ignore child nodes that have already been expanded.
 
-        g = active.g + edge.cost
+        g = active.g + edge.cost # get the cost of the current path to this child node.
 
-        if !open[child] || g < child.g # If the child node hasn't been tried or if the current path 
-          # to the child node is shorter than the previously tried path, save the g value in the child node.
+        # If the child node hasn't been tried or if the current path to the child node is shorter 
+        # than the previously tried path, save the g value in the child node.
+        if !open[child] || g < child.g 
           child.parent = active  # save a reference to the parent node
           child.g = g
           child.h(goal)
@@ -62,6 +61,7 @@ module AStar
       end
     end
 
+    puts "No path from #{start} to #{goal} was found."
     return nil 
   end
 
