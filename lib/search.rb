@@ -21,8 +21,8 @@
 
 module AStar
 
-  def self.retrieve_pv(active, from)
-    pv = []
+  def self.retrieve_pv(active, from) # This routine re-traces our steps from the goal node
+    pv = []                          #  back to the starting node.
     until active.parent.nil? do
       pv << active
       active = active.parent
@@ -30,7 +30,7 @@ module AStar
     pv.reverse!
   end
 
-  def self.search(graph, start, goal)
+  def self.search(start, goal)
     open = {}
     closed = {}
     active = start
