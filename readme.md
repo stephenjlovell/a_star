@@ -29,7 +29,7 @@ Search the graph for an optimal path and print it out:
 Example output:
 
     2.1.0 :001 > load 'initialize.rb'
-
+    
     [<N (1,2)>, <N (2,2)>, <N (3,3)>, <N (3,4)>, <N (4,5)>, <N (5,5)>, <N (6,4)>, <N (7,3)>, <N (7,2)>, <N (7,1)>, <N (7,0)>]
     |---------------------------------|
     |  ·   ·   ■   ·   ·   ·   ·   ·  |
