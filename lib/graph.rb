@@ -25,7 +25,7 @@ module AStar
 
   class CartesianNode
     attr_accessor :g, :h, :parent, :edges, :enabled
-    attr_reader :x, :y, :hash
+    attr_reader :x, :y, :hash # once initialized, the location of the node is immutable.
 
     def initialize(x,y)
       @x, @y = x, y # Stores the Cartesian coordinates for this node.
@@ -53,15 +53,15 @@ module AStar
     end
   end
 
-  class CartesianGraph # creates an interconnected Cartesian graph of (width)**2 nodes. 
-                       # Each node is linked to all adjacent nodes at initialization.
-    def initialize(width)
+  class CartesianGraph # Creates an interconnected Cartesian graph of (width)**2 nodes. 
+
+    def initialize(width) # Each node is linked to all adjacent nodes at initialization.
       @width = width
       @nodes = Array.new(width) {|y| Array.new(width) {|x| CartesianNode.new(x,y) } }
       link_nodes
     end
 
-    def each
+    def each # iterate over all nodes in the graph.
       @nodes.each_with_index do |row, y| 
         row.each_with_index do |node, x|
           yield(node)
@@ -73,22 +73,22 @@ module AStar
       @nodes.flatten.inject({}) { |hsh, node| hsh[node] = true; hsh }
     end
 
-    def [](x,y)
+    def [](x,y) # Get a node by its Cartesian coordinates.
       @nodes[y][x]
     end
 
-    def disable(x,y)
+    def disable(x,y) # Disable the node at the given coordinates.
       @nodes[y][x].enabled = false
     end
 
-    def enable(x,y)
+    def enable(x,y)  # Enable the node at the given coordinates.
       @nodes[y][x].enabled = true
     end
 
     GRAPHICS = { open: "\u00B7", blocked: "\u25a0", start: "\u0391", goal: "\u03A9", pv: "\u0298" }
 
-    def print(start=nil, goal=nil, pv=nil) # Prints out the graph along with the path taken from the start
-      if pv.nil? || pv.empty?              # node to the goal, if given.
+    def print(start=nil, goal=nil, pv=nil) # Prints out the graph along with the path taken from the
+      if pv.nil? || pv.empty?              # start node to the goal, if given.
         pv = {}
       else
         puts "\n"
@@ -132,12 +132,12 @@ module AStar
 
   end
 
-  def self.manhattan_distance(from, to)         # Returns the movement cost of going directly from one
-    ((from.y-to.y).abs + (from.x-to.x).abs)*100 # node to another without allowing diagonal movement.
+  def self.manhattan_distance(from, to)   # Returns the movement cost of going directly from one
+    (from.y-to.y).abs + (from.x-to.x).abs # node to another without allowing diagonal movement.
   end
 
   def self.distance(from, to)  # Returns the actual straight-line distance between the two nodes.
-    ((((from.y-to.y).abs)**2 + ((from.x-to.x).abs)**2)**(1/2.0))*100
+    (((from.y-to.y).abs)**2 + ((from.x-to.x).abs)**2)**(1/2.0)
   end
 
 end
