@@ -27,7 +27,7 @@ module AStar
       pv << active
       active = active.parent
     end
-    pv
+    pv.reverse!
   end
 
   def self.search(graph, start, goal)
@@ -44,7 +44,7 @@ module AStar
       open.delete(active)
       closed.store(active, true)
 
-      next unless active.enabled
+      next unless active.enabled # if this node is impassible, move on to the next one.
 
       active.edges.each do |edge|
         child = edge.child
@@ -52,10 +52,9 @@ module AStar
 
         g = active.g + edge.cost
 
-        if !open[child] || g < child.g
-          # If the child node hasn't been tried or if the current path to the child node is shorter than 
-          # the previously tried path, save the g value in the child node.
-          child.parent = active
+        if !open[child] || g < child.g # If the child node hasn't been tried or if the current path 
+          # to the child node is shorter than the previously tried path, save the g value in the child node.
+          child.parent = active  # save a reference to the parent node
           child.g = g
           child.h(goal)
           open.store(child, true) if !open[child] 

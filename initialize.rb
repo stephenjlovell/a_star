@@ -23,15 +23,18 @@
 require './lib/graph.rb'
 require './lib/search.rb'
 
-graph = AStar::Graph.new(8)
-5.times {|n| graph.disable(5, n) }
+graph = AStar::Graph.new(8) # create an 8x8 Cartesian graph
+
+5.times {|n| graph.disable(5, n) }  # add some obstacles to make things interesting
 5.times {|n| graph.disable(2, 7-n) }
+graph.disable(4,4)
+
 start = graph[0,3]
 goal = graph[7,0]
 
-pv = AStar::search(graph, start, goal)
+pv = AStar::search(graph, start, goal) # find the optimal path from start to goal
 print pv, "\n"
-graph.print(start, goal, pv)
+graph.print(start, goal, pv) # print out the optimal solution
 
 
 

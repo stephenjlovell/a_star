@@ -156,8 +156,6 @@ module AStar
     (from.y-to.y).abs + (from.x-to.x).abs
   end
 
-
-
 end
 
 
